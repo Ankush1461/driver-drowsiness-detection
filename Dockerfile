@@ -11,10 +11,15 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements
 COPY requirements.txt .
 
-# Install dependencies, then force-reinstall opencv-contrib to override
-# the opencv-python that ai-edge-litert pulls in
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir --force-reinstall opencv-contrib-python-headless
+# Install ai-edge-litert first (it pulls in opencv-python)
+RUN pip install --no-cache-dir ai-edge-litert
+
+# Force uninstall opencv-python, install contrib version with dnn support
+RUN pip uninstall -y opencv-python opencv-python-headless opencv-contrib-python-headless && \
+    pip install --no-cache-dir opencv-contrib-python-headless
+
+# Install remaining dependencies (skip opencv, already installed)
+RUN pip install --no-cache-dir numpy fastapi "uvicorn[standard]" websockets scikit-learn
 
 # Copy application files
 COPY . .
