@@ -1,5 +1,5 @@
 ai-edge-litert
-opencv-python-headless
+opencv-contrib-python-headless
 numpy
 fastapi
 uvicorn[standard]
