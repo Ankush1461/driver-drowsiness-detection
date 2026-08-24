@@ -21,6 +21,16 @@ except ImportError:
 
 # Load Models with CPU Optimizations for Hugging Face Free Tier
 cv2.setNumThreads(2) # CRITICAL: Prevent OpenCV from spawning 16 threads array on a 2-core container, which causes massive context-switching lag
+
+# Verify OpenCV DNN has Caffe support (fails when conflicting opencv packages are installed)
+if not hasattr(cv2.dnn, 'readNetFromCaffe'):
+    print("FATAL: cv2.dnn.readNetFromCaffe is missing!")
+    print(f"OpenCV version: {cv2.__version__}")
+    print("This is caused by conflicting opencv packages. Run:")
+    print("  pip uninstall -y opencv-python opencv-contrib-python opencv-python-headless opencv-contrib-python-headless")
+    print("  pip install opencv-contrib-python-headless")
+    raise RuntimeError("cv2.dnn.readNetFromCaffe not available - see above for fix")
+
 net = cv2.dnn.readNetFromCaffe("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
