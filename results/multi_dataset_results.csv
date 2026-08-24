@@ -1,0 +1,2 @@
+external_acc,external_f1,external_recall,external_precision,external_latency_ms,internal_acc,internal_f1,size_standard_mb,size_small_mb
+0.9716,0.9711499390491669,0.956,0.9867877786952931,15.113773629999923,0.898240111517686,0.9079154840744245,3.7953948974609375,0

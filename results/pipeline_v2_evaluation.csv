@@ -1,0 +1,13 @@
+metric,value
+accuracy,0.9995
+precision,1.0000
+recall,0.9990
+f1,0.9995
+specificity,1.0000
+tp,4995
+fp,0
+tn,5000
+fn,5
+face_misses,0
+n,10000
+model_size_mb,3.39

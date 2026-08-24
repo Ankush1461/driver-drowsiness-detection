@@ -1,0 +1,38 @@
+DDD 5-Fold CV Results (41,793 images, 22,348 drowsy + 19,445 non-drowsy)
+
+Baseline (drowsiness.tflite):
+  Accuracy:  53.70 +/- 0.03%
+  Precision: 0.536 +/- 0.000
+  Recall:    1.000 +/- 0.000
+  F1:        0.698 +/- 0.000
+  Fold accs: [53.68, 53.75, 53.70, 53.72, 53.65]
+  NOTE: Predicts nearly all samples as drowsy (class imbalance leveraged)
+
+Pipeline v2 (drowsiness_pipeline_v2.tflite):
+  Accuracy:  46.53 +/- 0.00%
+  Precision: 0.000 +/- 0.000
+  Recall:    0.000 +/- 0.000
+  F1:        0.000 +/- 0.000
+  Fold accs: [46.52, 46.52, 46.52, 46.53, 46.53]
+  NOTE: Predicts nearly all samples as non-drowsy (opposite bias)
+
+Robust (drowsiness_robust.tflite):
+  Accuracy:  53.09 +/- 0.40%
+  Precision: 0.536 +/- 0.002
+  Recall:    0.921 +/- 0.004
+  F1:        0.677 +/- 0.003
+  Fold accs: [53.19, 52.85, 52.63, 52.97, 53.80]
+
+STATISTICAL TESTS
+  Baseline vs Robust (ACC):  t=2.85,  p=0.0462, d=-2.00  *
+  Baseline vs Robust (PREC): t=0.22,  p=0.8350, d=-2.00  ns
+  Baseline vs Robust (REC):  t=39.94, p=0.0000, d=-2.00  ***
+  Baseline vs Robust (F1):   t=14.19, p=0.0001, d=-2.00  ***
+  Wilcoxon (Acc): W=1.00, p=0.125
+  Pv2 vs Robust (ACC): t=-32.80, p=0.000005, d=2.00  ***
+
+CONCLUSION: Significant domain gap between custom training data and DDD.
+All models achieve near-chance accuracy (~53%), indicating the DDD dataset
+has fundamentally different image characteristics (lighting, face position,
+resolution, preprocessing). This highlights the need for cross-dataset
+domain adaptation or training on more diverse data.

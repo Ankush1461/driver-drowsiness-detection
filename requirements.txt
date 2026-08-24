@@ -1,0 +1,7 @@
+ai-edge-litert
+opencv-python-headless
+numpy
+fastapi
+uvicorn[standard]
+websockets
+scikit-learn

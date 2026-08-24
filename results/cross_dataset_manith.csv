@@ -1,0 +1,13 @@
+metric,value
+train_dataset,akahana
+test_dataset,manith
+accuracy,0.8925
+precision,0.9084
+recall,0.8730
+f1,0.8904
+specificity,0.9120
+tp,1746
+fp,176
+tn,1824
+fn,254
+n,4000

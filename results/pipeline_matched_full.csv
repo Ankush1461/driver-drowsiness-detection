@@ -1,0 +1,13 @@
+metric,value
+accuracy,0.8790
+precision,0.8204
+recall,0.9666
+f1,0.8875
+specificity,0.7935
+tp,955
+fp,209
+tn,803
+fn,33
+face_misses,0
+n,2000
+note,robust model with RGB conversion matching app.py

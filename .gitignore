@@ -1,0 +1,43 @@
+# Computer Science / Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.idea/
+.vscode/
+
+# Deployment staging directories
+hf_deploy*/
+hf_staging*/
+deploy.ps1
+
+# Dataset images (Keep structure, ignore images)
+dataset/**/*.jpg
+dataset/**/*.jpeg
+dataset/**/*.png
+!dataset/**/.gitkeep
+
+# External datasets (271K+ images - too large for git)
+external_dataset/
+
+# Training results and experiments data
+results/*.npz
+results/*.tex
+
+# Project Reports
+Detailed_Project_Report.md
+
+# Logs & Debugging
+*.log
+.gradio/
+Media/
+
+# Python
+*.egg-info/
+dist/
+build/
+.eggs/

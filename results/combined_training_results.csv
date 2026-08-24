@@ -1,0 +1,2 @@
+combined_val_acc,combined_val_f1,external_acc,external_f1,size_mb,best_epoch,total_params,trainable_params
+0.9314340477435094,0.9366701536975939,0.9995,0.9995001499550135,4.36029052734375,12,11478,4218673
