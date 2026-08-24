@@ -18,7 +18,8 @@ RUN pip install --no-cache-dir --no-deps ai-edge-litert
 RUN pip uninstall -y opencv-python opencv-contrib-python opencv-python-headless opencv-contrib-python-headless 2>/dev/null; true
 
 # Install the SINGLE correct opencv package with full dnn support (Caffe, ONNX, etc.)
-RUN pip install --no-cache-dir opencv-contrib-python-headless
+# NOTE: OpenCV 5.0+ removed Caffe support, so we MUST pin to 4.x
+RUN pip install --no-cache-dir "opencv-contrib-python-headless<5"
 
 # Copy application files
 COPY . .

@@ -1,6 +1,6 @@
 numpy
 ai-edge-litert
-opencv-contrib-python-headless
+opencv-contrib-python-headless<5
 fastapi
 uvicorn[standard]
 websockets
