@@ -10,7 +10,11 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install dependencies, then force-reinstall opencv-contrib to override
+# the opencv-python that ai-edge-litert pulls in
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --force-reinstall opencv-contrib-python-headless
 
 # Copy application files
 COPY . .
