@@ -8,220 +8,318 @@ app_file: app.py
 pinned: true
 ---
 
-# DriveSafe AI - Real-Time Driver Drowsiness Detection
+# 🚗 DriveSafe AI: Real-Time Driver Drowsiness Detection
 
-> **99.0% accuracy** | **2.4 MB** | **150+ FPS** | **Sub-40ms latency**
-> A complete edge-deployed drowsiness detection pipeline: MobileNetV2 + CLAHE + FastAPI WebSocket
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Ankush1461%2Fdriver--drowsiness--detection-181717?style=for-the-badge&logo=github)](https://github.com/Ankush1461/driver-drowsiness-detection)
+[![HuggingFace Space](https://img.shields.io/badge/HuggingFace-Live%20Demo-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/spaces/ankushkarmakar/drivesafe-ai-v2)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.style=for-the-badge)](LICENSE)
 
-DriveSafe AI is a lightweight, real-time driver drowsiness detection system designed for **edge deployment without GPU**. It runs a full inference pipeline - face detection, lighting normalization, neural classification, temporal smoothing, and uncertainty-aware alerting - in under 40 milliseconds on a standard 2-vCPU Intel laptop.
+> **99.0% In-Distribution Accuracy** | **2.4 MB Quantized Model** | **150+ FPS** | **Sub-40ms End-to-End Latency**
 
-**[Try the Live Demo](https://huggingface.co/spaces/ankushkarmakar/drivesafe-ai-v2)** - Grant camera access and the system monitors you in real time.
-
-**[Read the Paper](DriveSafe_AI_JRTIP.tex)** - Published in the *Journal of Real-Time Image Processing (JRTIP)*.
+**DriveSafe AI** is a lightweight, edge-optimized driver drowsiness detection system engineered to run real-time inference **without dedicated GPU hardware**. Operating efficiently on standard consumer CPU architectures (e.g., 2-vCPU Intel), the pipeline incorporates face detection, localized lighting normalization (CLAHE), neural classification via dynamic quantized MobileNetV2, temporal smoothing, and uncertainty-aware three-zone alerting.
 
 ---
 
-## Results Across Evaluation Scenarios
+## 📋 Table of Contents
+- [Live Demo](#-live-demo)
+- [Key Features](#-key-features)
+- [Evaluation Results Across Scenarios](#-evaluation-results-across-scenarios)
+  - [Scenario 1: In-Distribution Evaluation](#scenario-1-in-distribution-single-dataset-split)
+  - [Scenario 2: Cross-Subject Baseline (True LOSO)](#scenario-2-cross-subject-baseline-true-loso-no-adaptation)
+  - [Scenario 3: Cross-Subject with Personalization (LOSO + Adaptive Calibration)](#scenario-3-cross-subject-with-personalization-true-loso--adaptive-calibration)
+  - [Per-Subject Performance Breakdown](#per-subject-breakdown-adaptive-v7)
+- [System Architecture & Pipeline](#-system-architecture--pipeline)
+- [Three-Zone Confidence Protocol](#-three-zone-confidence-protocol)
+- [Key Engineering Insights](#-key-engineering-insights)
+- [Performance Profile](#-performance-profile)
+- [Model Benchmark & Comparison](#-model-benchmark--comparison)
+- [Quick Start & Deployment](#-quick-start--deployment)
+  - [Local Installation](#1-local-python-setup)
+  - [Docker Containerization](#2-docker-deployment)
+- [Project Directory Structure](#-project-directory-structure)
+- [License](#-license)
 
-This system was evaluated under three increasingly realistic conditions. The accuracy gap between them tells an important story about what 99% accuracy really means in the real world.
+---
+
+## 🌐 Live Demo
+
+- ⚡ **[Try the Live Interactive Demo](https://huggingface.co/spaces/ankushkarmakar/drivesafe-ai-v2)**: Grant camera access to monitor drowsiness in real time in your web browser.
+
+---
+
+## ✨ Key Features
+
+- 🏎️ **Ultra-Low Latency & High FPS**: Sub-40ms end-to-end pipeline execution delivering 150+ FPS on edge CPUs.
+- 📱 **Compact Edge Deployment**: Dynamic quantized MobileNetV2 reduced to **2.4 MB** (72% size reduction from 8.6 MB Float32).
+- 💡 **Illumination-Robust (CLAHE)**: +65.7 percentage points accuracy boost under harsh lighting variations and shadows.
+- 🎯 **Few-Shot Personalization**: 30-frame (1 second) zero-label startup calibration lifts Leave-One-Subject-Out (LOSO) cross-subject accuracy from **53.2% to 96.1%**.
+- 🛡️ **Uncertainty-Aware Alerting**: Three-zone confidence filtering delivers 94.7% high-confidence coverage with zero false alarms on ambiguous frames.
+
+---
+
+## 📊 Evaluation Results Across Scenarios
+
+DriveSafe AI was evaluated across three rigorous evaluation scenarios to benchmark real-world cross-subject generalization.
 
 ### Scenario 1: In-Distribution (Single Dataset Split)
 
-The standard train/test split on the same dataset evaluation. This is what most papers report.
+Standard train/test split on homogeneous subject data.
 
 | Metric | MobileNetV2 + CLAHE |
-|---|:---:|
+| :--- | :---: |
 | **Accuracy** | **99.0%** |
-| **Precision** | 98.8% |
-| **Recall** | 99.2% |
-| **F1 Score** | 0.990 |
-| **Model Size** | 2.4 MB (dynamic quantized) |
-| **Inference Time** | 1.2ms per frame |
+| **Precision** | **98.8%** |
+| **Recall** | **99.2%** |
+| **F1 Score** | **0.990** |
+| **Model Size** | **2.4 MB** *(Dynamic Quantized TFLite)* |
+| **Inference Time** | **1.2ms / frame** |
 
-> **This is the live demo accuracy.** The webcam demo uses this exact pipeline - MobileNetV2 with CLAHE preprocessing, running on a TFLite quantized model.
+> *Note: This represents the model running in the live interactive web demo.*
+
+---
 
 ### Scenario 2: Cross-Subject Baseline (True LOSO, No Adaptation)
 
-The hardest realistic test: train on 23 subjects, test on the 24th, repeated for all 24 subjects. The model has **never seen the test subject face**.
+Leave-One-Subject-Out (LOSO) cross-validation across 24 distinct subjects. **The model never saw the target subject during training.**
 
 | Metric | Baseline (v2) |
-|---|:---:|
-| **Accuracy** | 53.2% +/- 19.3% |
-| **Precision** | 34.3% |
-| **Recall** | 41.4% |
-| **F1 Score** | 0.300 |
-| **False Alarm Rate** | 40.9% |
+| :--- | :---: |
+| **Accuracy** | **53.2% ± 19.3%** |
+| **Precision** | **34.3%** |
+| **Recall** | **41.4%** |
+| **F1 Score** | **0.300** |
+| **False Alarm Rate** | **40.9%** |
 
-> **This is the honest truth most papers hide.** Without subject-specific calibration, a drowsiness detector that works at 99% on known drivers drops to barely above random chance on new drivers. This is the core problem this research addresses.
+> *Insight: Uncalibrated deep neural networks suffer severe domain shifts across different subject face structures.*
+
+---
 
 ### Scenario 3: Cross-Subject with Personalization (True LOSO + Adaptive Calibration)
 
-The same true LOSO protocol, but with a **30-frame (1 second) calibration step** at vehicle startup. The driver just sits normally for 1 second - no labeling needed, just active (awake) frames.
+Same true LOSO protocol paired with a **30-frame (1-second) passive calibration** step at startup (active driver state assumed).
 
-| Metric | Baseline (v2) | **Adaptive (v7)** | Improvement |
-|---|:---:|:---:|:---:|
-| **Accuracy** | 53.2% +/- 19.3% | **96.1% +/- 4.9%** | +42.9pp |
-| **Precision** | 34.3% | **91.2%** | +56.9pp |
-| **Recall** | 41.4% | **99.2%** | +57.8pp |
-| **F1 Score** | 0.300 | **0.947** | +0.647 |
-| **False Alarm Rate** | 40.9% | **5.5%** | -35.4pp |
-| **Video Accuracy** | 61.1% | **61.1%** | - |
+| Metric | Baseline (v2) | Adaptive (v7) | Net Improvement |
+| :--- | :---: | :---: | :---: |
+| **Accuracy** | 53.2% ± 19.3% | **96.1% ± 4.9%** | **+42.9 pp** |
+| **Precision** | 34.3% | **91.2%** | **+56.9 pp** |
+| **Recall** | 41.4% | **99.2%** | **+57.8 pp** |
+| **F1 Score** | 0.300 | **0.947** | **+0.647** |
+| **False Alarm Rate** | 40.9% | **5.5%** | **-35.4 pp** |
+| **Video Accuracy** | 61.1% | **61.1%** | — |
 
-**Confusion Matrix (Pooled, 24 subjects):** TP=1,191 / FP=131 / FN=10 / TN=2,268
+**Pooled Confusion Matrix (24 subjects):**
+- True Positives (TP): `1,191` | False Positives (FP): `131`
+- False Negatives (FN): `10` | True Negatives (TN): `2,268`
 
-> **The solution: personalization, not bigger models.** Just 30 frames of calibration (1 second of video) lifts cross-subject accuracy from 53% to 96%. The model is retrained from scratch for each subject - no data leakage.
+---
 
 ### Per-Subject Breakdown (Adaptive, v7)
 
-| Range | Subjects | Count |
-|---|---|:---:|
-| 95-100% | S02, S03, S07, S09, S10, S11, S13, S15, S16, S18, S19, S20, S21, S22, S24 | 15 |
-| 90-95% | S01, S04, S05, S06, S08, S12, S14, S17, S23 | 9 |
-| < 90% | - | 0 |
+| Accuracy Range | Subject Identifiers | Subject Count |
+| :---: | :--- | :---: |
+| **95% – 100%** | S02, S03, S07, S09, S10, S11, S13, S15, S16, S18, S19, S20, S21, S22, S24 | **15** |
+| **90% – 95%** | S01, S04, S05, S06, S08, S12, S14, S17, S23 | **9** |
+| **< 90%** | None | **0** |
 
-> All 24 subjects are above 90% accuracy. 15 subjects are above 95%.
-
----
-
-## Performance Profile
-
-| Metric | Value |
-|---|---|
-| **End-to-End Latency** | < 40ms (2-vCPU Intel) |
-| **Throughput** | 150+ FPS |
-| **Model Size** | 2.4 MB (dynamic quantized, 72% compression from 8.6 MB Float32) |
-| **Inference Time** | 1.2ms per frame (MobileNetV2 TFLite) |
-| **Face Detection** | OpenCV SSD, amortized every 15th frame (~17ms) |
-| **Total Pipeline** | Face detect -> CLAHE -> TFLite inference -> Temporal smoothing -> Alert |
+> *All 24 test subjects achieve >90.0% individual accuracy, with 15 achieving >95.0%.*
 
 ---
 
-## How It Works
+## 🏗️ System Architecture & Pipeline
 
-Browser captures 320x240 webcam -> WebSocket -> OpenCV SSD face detection (every 15th frame) -> CLAHE -> MobileNetV2 TFLite (every 3rd frame) -> Temporal buffer (3s) -> Alert
-
-### Three-Zone Confidence Protocol
-
-Instead of forcing binary decisions on ambiguous frames, the system refuses to classify uncertain predictions:
-
-| Zone | Threshold | Behavior | Coverage |
-|---|---|---|:---:|
-| **Active (Safe)** | sigma < 0.05 | Driver is alert | 82.1% |
-| **Uncertain** | 0.05 <= sigma <= 0.95 | Refuse - trigger secondary monitors | 5.3% |
-| **Fatigue (Alert)** | sigma > 0.95 | Sound alarm + visual alert | 12.6% |
-
-> **94.7% high-confidence coverage with 0% false alarm rate.** The 5.3% uncertain zone eliminates ambiguous predictions that would otherwise cause false alarms.
-
----
-
-## Key Research Contributions
-
-### 1. Pipeline Decomposition - The SSD Bottleneck
-
-By systematically profiling each stage of the inference pipeline, we discovered that **preprocessing, not network capacity, is the dominant accuracy bottleneck**:
-
-- The OpenCV SSD face detector uses a tight bounding box that **clips peripheral facial features** (forehead, jawline, ears)
-- This introduces a **domain shift** between training (full faces) and inference (clipped faces)
-- Quantified impact: **-12.1 percentage points** of accuracy lost purely from the face detection handoff
-
-### 2. ReLU vs. Hard-Swish Quantization Collapse
-
-MobileNetV3 uses hard-swish activations optimized for GPU inference. Under standard edge quantization:
-
-| Architecture | Activation | Quantized Size | Accuracy | Verdict |
-|---|---|---|---|---|
-| MobileNetV2 | ReLU | 2.4 MB | **99.0%** | Stable |
-| MobileNetV3 | Hard-Swish | 2.3 MB | ~50% | Collapses |
-
-> MobileNetV3 hard-swish activations produce near-random probability distributions (sigma ~ 0.63 for both classes) under dynamic quantization. **ReLU is the correct choice for edge deployment.**
-
-### 3. CLAHE - The +65.7pp Preprocessing Win
-
-| Preprocessing | Accuracy | Notes |
-|---|---|---|
-| Raw RGB | 33.3% | Fails under mixed lighting |
-| **CLAHE** | **99.0%** | Local histogram equalization bridges illumination gap |
-
-> CLAHE normalizes lighting at the local tile level, making the classifier robust to headlights, shadows, and time-of-day variations.
-
-### 4. Subject-Adaptive Few-Shot Calibration
-
-30 frames (1 second) of the driver sitting normally at vehicle startup:
-
-1. Collect 30 active (awake) frames during the first minute of driving
-2. Fine-tune the final 5 layers of MobileNetV2 on these frames
-3. Calibrate the classification threshold using the model own uncertainty estimates
-4. **Zero manual labeling required** - the system assumes the driver is awake at startup
-
-### 5. Test-Time Augmentation (TTA)
-
-Averaging predictions over 3 augmented versions of the same face:
-
-| Method | Accuracy | Stability |
-|---|---|---|
-| Single prediction | 94.2% | Moderate variance |
-| **TTA (3 augmented)** | **96.1%** | Reduced variance |
+```
+[ Webcam Feed (320x240) ] 
+          │
+          ▼  (WebSocket stream)
+[ OpenCV SSD Face Detection ] ──► (Amortized: Execution every 15th frame ~17ms)
+          │
+          ▼
+[ CLAHE Preprocessing ] ────────► (Contrast Limited Adaptive Histogram Equalization)
+          │
+          ▼
+[ MobileNetV2 TFLite Engine ] ──► (Inference every 3rd frame, 1.2ms latency)
+          │
+          ▼
+[ Temporal Buffer (3 Sec) ] ────► (Sliding window noise filtering)
+          │
+          ▼
+[ Uncertainty-Aware Alerting ] ─► (Active / Uncertain / Fatigue Alarm)
+```
 
 ---
 
-## Quick Start
+## 🛡️ Three-Zone Confidence Protocol
 
-### Local (Python)
+To mitigate dangerous false alarms and handle ambiguous frames, predictions are divided into three distinct operational zones:
 
-git clone https://github.com/ankushkarmakar/DriveSafe-AI.git
-cd DriveSafe-AI
+| Operational Zone | Threshold ($\sigma$) | System Action | Target Coverage |
+| :--- | :---: | :--- | :---: |
+| 🟢 **Active (Safe)** | $\sigma < 0.05$ | Driver alert and responsive | **82.1%** |
+| 🟡 **Uncertain** | $0.05 \le \sigma \le 0.95$ | Defer classification; request secondary monitoring | **5.3%** |
+| 🔴 **Fatigue (Alert)** | $\sigma > 0.95$ | Trigger visual warning & auditory alarm | **12.6%** |
+
+---
+
+## 💡 Key Engineering Insights
+
+1. **Quantifying the SSD Detection Bottleneck**:
+   - OpenCV SSD face bounding box tightly clips peripheral features (forehead, ears, jawline).
+   - Induces an unintended domain mismatch between full-face training and clipped-face inference.
+   - Identified a **12.1 percentage point loss** attributable solely to face detection handoffs.
+
+2. **ReLU vs. Hard-Swish Quantization Collapse**:
+   - MobileNetV3 hard-swish activation functions suffer severe degradation under dynamic 8-bit quantization ($\approx 50\%$ accuracy / near-random output variance).
+   - MobileNetV2 with **ReLU** remains stable and maintains **99.0%** accuracy post-quantization.
+
+3. **CLAHE Illumination Robustness**:
+   - Raw RGB input drops to **33.3% accuracy** under poor lighting.
+   - Local histogram equalization via **CLAHE** yields a **+65.7 pp increase** to achieve **99.0% accuracy**.
+
+4. **Subject-Adaptive Few-Shot Calibration**:
+   - Fine-tunes top 5 layers of MobileNetV2 using 30 frames captured during first minute of driving.
+   - Fully automated zero-label calibration.
+
+5. **Test-Time Augmentation (TTA)**:
+   - Evaluates multi-crop/augmented frames per face to increase stability ($94.2\% \rightarrow 96.1\%$).
+
+---
+
+## ⏱️ Performance Profile
+
+| Operational Metric | Measured Value |
+| :--- | :--- |
+| **End-to-End Latency** | **< 40ms** (2-vCPU Intel Laptop CPU) |
+| **Throughput** | **150+ FPS** |
+| **Quantized Model Size** | **2.4 MB** *(72% compression from 8.6 MB Float32)* |
+| **Classification Inference** | **1.2ms / frame** |
+| **Face Detection Cost** | **~17ms** *(Amortized every 15th frame)* |
+
+---
+
+## 🔬 Model Benchmark & Comparison
+
+| Architecture | Model Size | In-Distribution Accuracy | Cross-Subject (LOSO) Accuracy | Quantization Stability |
+| :--- | :---: | :---: | :---: | :---: |
+| **MobileNetV3** | 4.3 MB | ~98.0% | 59.0% | Collapses (Hard-Swish) |
+| **MobileNetV2 (Float32)** | 8.6 MB | 98.3% | 96.1% | N/A |
+| **MobileNetV2 (Dynamic Quantized)** | **2.4 MB** | **99.0%** | **96.1% (Adaptive)** | **Stable (ReLU)** |
+
+---
+
+## 🚀 Quick Start & Deployment
+
+### Prerequisites
+
+- **Python**: Python 3.10 or higher recommended.
+- **System Libraries** (Linux only): `libgl1`, `libglib2.0-0` (for OpenCV rendering).
+- **Webcam**: Standard USB or integrated laptop webcam.
+
+---
+
+### 1. Local Python Setup
+
+#### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Ankush1461/driver-drowsiness-detection.git
+cd driver-drowsiness-detection
+```
+
+#### Step 2: Create & Activate Virtual Environment
+
+- **On Windows (PowerShell / CMD)**:
+  ```powershell
+  python -m venv venv
+  .\venv\Scripts\activate
+  ```
+
+- **On Linux / macOS**:
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+
+#### Step 3: Install Dependencies
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
-python app.py
+```
 
-Open **http://127.0.0.1:7860** - grant camera access and the system starts monitoring.
+> ⚠️ **Important Dependency Note**: OpenCV 5.0+ dropped legacy Caffe model support (`cv2.dnn.readNetFromCaffe`). The `requirements.txt` pins `opencv-contrib-python-headless<5` to ensure SSD face detection models load correctly.
 
-### Docker
+#### Step 4: Launch the Production Server
 
+You can launch the server using either method below:
+
+- **Method A: Direct Script Execution**
+  ```bash
+  python app.py
+  ```
+
+- **Method B: Uvicorn ASGI Server**
+  ```bash
+  uvicorn app:app --host 0.0.0.0 --port 7860
+  ```
+
+#### Step 5: Open Web Interface
+Open your web browser and navigate to:
+```text
+http://127.0.0.1:7860  or  http://localhost:7860
+```
+Grant webcam access when prompted to begin real-time drowsiness monitoring via WebSocket.
+
+---
+
+### 2. Docker Deployment
+
+The included `Dockerfile` builds a lightweight containerized environment with all system dependencies and OpenCV/TFLite bindings pre-configured.
+
+#### Step 1: Build the Container Image
+```bash
 docker build -t drivesafe-ai .
-docker run -p 7860:7860 drivesafe-ai
+```
 
-### Requirements
+#### Step 2: Run the Container
 
-numpy, ai-edge-litert, opencv-contrib-python-headless<5, fastapi, uvicorn[standard], websockets, scikit-learn
+- **Foreground (Interactive Logs)**:
+  ```bash
+  docker run -p 7860:7860 drivesafe-ai
+  ```
 
----
+- **Background (Detached Mode)**:
+  ```bash
+  docker run -d -p 7860:7860 --name drivesafe-app drivesafe-ai
+  ```
 
-## Project Structure
-
-app.py - FastAPI WebSocket server (production)
-drowsiness_v2_dynamic.tflite - MobileNetV2 quantized (2.4 MB) - PRODUCTION MODEL
-drowsiness_v2.keras - Full Keras checkpoint (Float32, 8.6 MB)
-deploy.prototxt - SSD face detector configuration
-res10_300x300_ssd_iter_140000.caffemodel - SSD face detector weights
-experiments/ - LOSO evaluation scripts (v2/v3/v6/v7)
-results/ - CSV outputs per experiment version
-DriveSafe_AI_JRTIP.tex - Research paper (LaTeX)
-
----
-
-## Model Comparison
-
-| Model | Size | In-Distribution | Cross-Subject (LOSO) | Quantization |
-|---|---|---|---|---|
-| MobileNetV3 | 4.3 MB | ~98% | 59.0% | Collapses (hard-swish) |
-| **MobileNetV2** | **2.4 MB** | **99.0%** | **96.1%** (adaptive) | Stable (ReLU) |
-| MobileNetV2 (Float32) | 8.6 MB | 98.3% | 96.1% | N/A (no quantization) |
-
-> MobileNetV2 dynamic quantization **compresses by 72%** (8.6 MB -> 2.4 MB) while **improving** validation accuracy to 99.0%.
+#### Step 3: Access & Manage Container
+- **Access Web Interface**: Visit `http://localhost:7860` in your web browser.
+- **View Container Logs** (Background mode): `docker logs -f drivesafe-app`
+- **Stop Container** (Background mode): `docker stop drivesafe-app`
 
 ---
 
-## Citation
 
-@article{karmakar2026drivesafe,
-  title={DriveSafe AI: Quantifying the Preprocessing Bottleneck in Lightweight Driver Drowsiness Detection},
-  author={Karmakar, Ankush},
-  journal={Journal of Real-Time Image Processing},
-  year={2026}
-}
+
+## 📁 Project Directory Structure
+
+```
+driver-drowsiness-detection/
+├── app.py                                   # FastAPI WebSocket production server
+├── drowsiness_v2_dynamic.tflite             # Production quantized model (2.4 MB)
+├── drowsiness_v2.keras                      # Float32 model checkpoint (8.6 MB)
+├── deploy.prototxt                          # OpenCV SSD face detector config
+├── res10_300x300_ssd_iter_140000.caffemodel # OpenCV SSD face detector weights
+├── clean_dataset.py                         # Dataset cleaning utility
+├── evaluate_model.py                        # Model evaluation harness
+├── requirements.txt                         # Python dependencies
+├── Dockerfile                               # Container build configuration
+├── experiments/                             # LOSO evaluation scripts (v2, v3, v6, v7)
+└── results/                                 # Experiment outputs & benchmark metrics
+```
 
 ---
 
-## License
+## 📄 License
 
-CC BY-NC 4.0 - Non-commercial use only.
+This project is distributed under the **CC BY-NC 4.0 License** (Creative Commons Attribution-NonCommercial 4.0 International). Free for personal, academic, and non-commercial usage.
+
+
