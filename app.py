@@ -13,11 +13,11 @@ try:
     import tensorflow as tf
     print("Using TensorFlow Keras")
 except ImportError:
-    import ai_edge_litert as _litert
+    from ai_edge_litert.interpreter import Interpreter as _Interpreter
     import types as _types
     tf = _types.ModuleType("tf")
     tf.lite = _types.ModuleType("tf.lite")
-    tf.lite.Interpreter = _litert.Interpreter
+    tf.lite.Interpreter = _Interpreter
     print("Using AI Edge LiteRT")
 
 # CLAHE Preprocessing - normalizes lighting across different camera conditions
