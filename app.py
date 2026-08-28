@@ -10,7 +10,8 @@ from fastapi.responses import HTMLResponse
 
 # AI ENGINE (LiteRT)
 try:
-import tensorflow as tf
+    import tensorflow as tf
+
 print("Using TensorFlow Keras")
 
 # CLAHE Preprocessing - normalizes lighting across different camera conditions
