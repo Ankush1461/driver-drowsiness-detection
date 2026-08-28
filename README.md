@@ -1,6 +1,6 @@
 ---
 title: DriveSafe AI
-emoji: car
+emoji: 🚗
 colorFrom: blue
 colorTo: purple
 sdk: docker
