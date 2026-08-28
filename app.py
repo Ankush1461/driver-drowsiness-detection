@@ -9,9 +9,12 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
 # AI ENGINE (LiteRT)
-import tensorflow as tf
-
-print("Using TensorFlow Keras")
+try:
+    import tensorflow as tf
+    print("Using TensorFlow Keras")
+except ImportError:
+    import ai_edge_litert as tf
+    print("Using AI Edge LiteRT")
 
 # CLAHE Preprocessing - normalizes lighting across different camera conditions
 def apply_clahe(face_bgr):
