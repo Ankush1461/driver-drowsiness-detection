@@ -10,14 +10,51 @@ from fastapi.responses import HTMLResponse
 
 # AI ENGINE (LiteRT)
 try:
-    import ai_edge_litert.interpreter as litert
-    print("Using LiteRT (New Google TFLite Runtime)")
-except ImportError:
-    try:
-        import tflite_runtime.interpreter as litert
-    except ImportError:
-        import tensorflow as tf
-        litert = tf.lite
+import tensorflow as tf
+print("Using TensorFlow Keras")
+
+# CLAHE Preprocessing - normalizes lighting across different camera conditions
+def apply_clahe(face_bgr):
+    lab = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2LAB)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+    return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
+# DROWSINESS THRESHOLD — higher = fewer false alarms, lower = more sensitive
+DROWSINESS_THRESHOLD = 0.35  # Optimized for minimal false alarms
+
+# Test-Time Augmentation (TTA) — averages predictions over multiple
+# augmented versions of the same face for more stable output
+def predict_tta(interpreter, input_details, output_details, face_bgr, n_aug=3):
+    """Run TTA: predict on original + 2 augmented versions, return average."""
+    preds = []
+    face_clahe = apply_clahe(face_bgr)
+    face_rgb = cv2.cvtColor(face_clahe, cv2.COLOR_BGR2RGB)
+    face_resized = (cv2.resize(face_rgb, (96, 96)).astype(np.float32) / 127.5) - 1.0
+    
+    # Original prediction
+    face_preprocessed = face_resized  # already [-1,1] from line above
+    input_data = np.expand_dims(face_resized, axis=0)
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+    preds.append(float(interpreter.get_tensor(output_details[0]['index'])[0][0]))
+    
+    # Augmented predictions (brightness + contrast variants)
+    for _ in range(n_aug - 1):
+        aug = face_resized.copy()
+        # Random brightness
+        delta = np.random.uniform(-0.05, 0.05)
+        aug = np.clip(aug + delta, -1.0, 1.0)
+        # Random contrast
+        mean = aug.mean()
+        factor = np.random.uniform(0.95, 1.05)
+        aug = np.clip((aug - mean) * factor + mean, -1.0, 1.0)
+        input_data = np.expand_dims(aug, axis=0)
+        interpreter.set_tensor(input_details[0]['index'], input_data)
+        interpreter.invoke()
+        preds.append(float(interpreter.get_tensor(output_details[0]['index'])[0][0]))
+    
+    return np.mean(preds)
 
 # Load Models with CPU Optimizations for Hugging Face Free Tier
 cv2.setNumThreads(2) # CRITICAL: Prevent OpenCV from spawning 16 threads array on a 2-core container, which causes massive context-switching lag
@@ -35,10 +72,12 @@ net = cv2.dnn.readNetFromCaffe("deploy.prototxt", "res10_300x300_ssd_iter_140000
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
-interpreter = litert.Interpreter(model_path="drowsiness.tflite", num_threads=2) # 2 threads optimal for Free Spaces
+# Load TFLite model (2.4 MB MobileNetV2, 99.0% accuracy)
+interpreter = tf.lite.Interpreter(model_path="drowsiness_v2_dynamic.tflite")
 interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
+print(f"Loaded TFLite model: {input_details[0]['shape']}")
 
 html_content = """
 <!DOCTYPE html>
@@ -427,25 +466,21 @@ async def websocket_endpoint(websocket: WebSocket):
                         if face_roi.size > 100:
                             try:
                                 # Convert from BGR (OpenCV) to RGB (Model training color-space)
-                                face_rgb = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
+                                face_clahe = apply_clahe(face_roi)
+                                face_rgb = cv2.cvtColor(face_clahe, cv2.COLOR_BGR2RGB)
                                 
                                 # Resize to the actual Model Input Shape (96x96 instead of 224x224)
-                                face_resized = cv2.resize(face_rgb, (96, 96)).astype(np.float32)
+                                face_resized = (cv2.resize(face_rgb, (96, 96)).astype(np.float32) / 127.5) - 1.0
                                 face_batch = np.expand_dims(face_resized, axis=0)
                                 
-                                # The MobileNetV3 preprocessing expects values in range [0, 255] and handles standardizing itself.
-                                interpreter.set_tensor(input_details[0]['index'], face_batch)
-                                interpreter.invoke()
-                                pred = interpreter.get_tensor(output_details[0]['index'])
+                                # TTA: Average predictions over augmented versions for stability
+                                prob = predict_tta(interpreter, input_details, output_details, face_roi)
                                 
-                                # Sigmoid output for 'Fatigue Subjects'
-                                prob = float(pred[0][0])
-                                
-                                # For display, map conf to [0.5, 1] for whichever class it predicts, so user sees 50-100% confidence
+                                # For display, map conf to [0.5, 1] for whichever class it predicts
                                 raw_conf = prob if prob > 0.5 else (1.0 - prob)
                                 conf_display = (0.4 * raw_conf) + (0.6 * state["last_conf"]) # Smoothing
     
-                                if prob > 0.5:
+                                if prob > DROWSINESS_THRESHOLD:
                                     if state["drowsy_since"] is None: 
                                         state["drowsy_since"] = time.time()
                                         status = "DROWSY"

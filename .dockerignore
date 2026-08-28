@@ -1,4 +1,4 @@
-# Datasets (271K+ images - must not be in Docker image)
+# Datasets (271K+ images - too large for Docker)
 external_dataset/
 dataset/
 
@@ -6,18 +6,19 @@ dataset/
 experiments/
 results/
 
-# Experimental model variants (only drowsiness.tflite is needed at runtime)
+# Experimental/unused model variants (only drowsiness_v2_dynamic.tflite is needed)
 drowsiness.keras
-drowsiness_robust.keras
+drowsiness.onnx
+drowsiness.tflite
+drowsiness_quant.onnx
 drowsiness_robust.tflite
-drowsiness_pipeline.keras
-drowsiness_pipeline.tflite
-drowsiness_pipeline_v2.keras
-drowsiness_pipeline_v2.tflite
-drowsiness_pipeline_matched.keras
-drowsiness_pipeline_matched.tflite
-drowsiness_akahana_matched.keras
-drowsiness_akahana_matched.tflite
+drowsiness_v2.keras
+drowsiness_v2_f16.tflite
+drowsiness_v2_int8.tflite
+drowsiness_uta_finetuned.keras
+drowsiness_uta_finetuned.tflite
+drowsiness_v2_finetuned.keras
+drowsiness_v2_finetuned.tflite
 
 # Training and evaluation scripts (not needed at runtime)
 drowsiness.py
@@ -26,13 +27,21 @@ evaluate_model.py
 clean_dataset.py
 test_ws.py
 
+# Development/experimental scripts
+_check_v6.py
+_gen_scripts.py
+_part2.py
+_test_v6_single.py
+_update_readme.py
+keep_alive.py
+keep_alive.bat
+
 # Documentation
 *.md
 LICENSE
 .git/
 .gitattributes
 .gitignore
-.gitkeep
 
 # Python cache
 __pycache__/
@@ -46,3 +55,5 @@ __pycache__/
 # Logs
 *.log
 .gradio/
+.env_temp
+package-lock.json

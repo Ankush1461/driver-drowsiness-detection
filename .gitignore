@@ -41,3 +41,26 @@ Media/
 dist/
 build/
 .eggs/
+
+# Development/experimental scripts (not for public repo)
+_check_v6.py
+_gen_scripts.py
+_part2.py
+_test_v6_single.py
+_update_readme.py
+keep_alive.py
+keep_alive.bat
+
+# Unused model variants (only keep v2_dynamic and v2_finetuned for LOSO demo)
+drowsiness.keras
+drowsiness.onnx
+drowsiness.tflite
+drowsiness_quant.onnx
+drowsiness_robust.tflite
+drowsiness_v2_f16.tflite
+drowsiness_v2_int8.tflite
+drowsiness_uta_finetuned.keras
+drowsiness_uta_finetuned.tflite
+.env_temp
+package-lock.json
+drowsiness_v2_finetuned.tflite

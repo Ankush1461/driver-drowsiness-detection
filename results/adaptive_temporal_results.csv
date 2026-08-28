@@ -1,0 +1,8 @@
+method,window_sec,detection_rate_pct,fa_rate_per_min,alerts,detected
+Fixed 0.0s,0.0,100.0,399.40,2000,3
+Fixed 0.5s,0.5,100.0,12.80,67,3
+Fixed 1.0s,1.0,100.0,6.00,33,3
+Fixed 1.5s,1.5,100.0,4.00,23,3
+Fixed 2.0s,2.0,100.0,2.80,17,3
+Fixed 3.0s,3.0,100.0,1.60,11,3
+Adaptive (0.5--1.5s),-1,100.0,12.80,67,3

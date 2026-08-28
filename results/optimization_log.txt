@@ -1,0 +1,116 @@
+======================================================================
+DriveSafe AI Pipeline Optimization
+======================================================================
+
+Discovering subjects...
+Using 24 subjects
+Loading SSD face detector...
+
+======================================================================
+PHASE 1: Sigmoid Distribution Analysis (drowsiness_robust.tflite)
+======================================================================
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+  Subject 01 Level=10 (?           ) mean_prob=0.5331 std=0.0254 quality=0.824 frames=30
+  Subject 01 Level= 5 (?           ) mean_prob=0.5307 std=0.0178 quality=0.822 frames=30
+  Subject 01 Level= 0 (alert       ) mean_prob=0.5212 std=0.0186 quality=0.854 frames=30
+  Subject 02 Level= 0 (alert       ) mean_prob=0.5204 std=0.0159 quality=0.871 frames=30
+  Subject 02 Level= 5 (?           ) mean_prob=0.5192 std=0.0164 quality=0.876 frames=30
+  Subject 02 Level=10 (?           ) mean_prob=0.5197 std=0.0126 quality=0.885 frames=30
+  Subject 03 Level=10 (?           ) mean_prob=0.5418 std=0.0135 quality=0.773 frames=30
+  Subject 03 Level= 5 (?           ) mean_prob=0.5275 std=0.0107 quality=0.776 frames=30
+  Subject 03 Level= 0 (alert       ) mean_prob=0.5210 std=0.0186 quality=0.860 frames=30
+  Subject 04 Level= 5 (?           ) mean_prob=0.5162 std=0.0177 quality=0.800 frames=30
+  Subject 04 Level= 0 (alert       ) mean_prob=0.5144 std=0.0141 quality=0.797 frames=30
+  Subject 04 Level=10 (?           ) mean_prob=0.5293 std=0.0115 quality=0.653 frames=30
+  Subject 05 Level= 5 (?           ) mean_prob=0.5292 std=0.0159 quality=0.801 frames=30
+  Subject 05 Level=10 (?           ) mean_prob=0.5288 std=0.0145 quality=0.835 frames=30
+  Subject 05 Level= 0 (alert       ) mean_prob=0.4937 std=0.0120 quality=0.846 frames=30
+  Subject 06 Level= 5 (?           ) mean_prob=0.5371 std=0.0172 quality=0.734 frames=30
+  Subject 06 Level=10 (?           ) mean_prob=0.5323 std=0.0156 quality=0.790 frames=30
+  Subject 06 Level= 0 (alert       ) mean_prob=0.5322 std=0.0219 quality=0.807 frames=30
+
+  ALERT distribution: mean=0.5219 std=0.0108 min=0.4937 max=0.5371 median=0.5211
+
+  DROWSY distribution: mean=0.5308 std=0.0066 min=0.5197 max=0.5418 median=0.5308
+
+======================================================================
+PHASE 2: Model Comparison (all 6 TFLite models, threshold=0.5)
+======================================================================
+
+  Testing drowsiness (4.4 MB)...
+    Acc=33.3% Prec=33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN=0 TN=0)
+
+  Testing drowsiness_robust (4.4 MB)...
+    Acc=34.7% Prec=33.8% Rec=100.0% F1=0.505 FAR=97.9% (TP=24 FP=47 FN=0 TN=1)
+
+  Testing pipeline (3.2 MB)...
+    Acc=68.1% Prec=66.7% Rec=8.3% F1=0.148 FAR=2.1% (TP=2 FP=1 FN=22 TN=47)
+
+  Testing pipeline_v2 (3.4 MB)...
+    Acc=66.7% Prec=0.0% Rec=0.0% F1=0.000 FAR=0.0% (TP=0 FP=0 FN=24 TN=48)
+
+  Testing pipeline_matched (3.2 MB)...
+    Acc=66.7% Prec=0.0% Rec=0.0% F1=0.000 FAR=0.0% (TP=0 FP=0 FN=24 TN=48)
+
+  Testing akahana_matched (3.2 MB)...
+    Acc=62.5% Prec=0.0% Rec=0.0% F1=0.000 FAR=6.2% (TP=0 FP=3 FN=24 TN=45)
+
+======================================================================
+PHASE 3: Threshold Sweep (best model from Phase 2)
+======================================================================
+Best model: drowsiness_robust (F1=0.505)
+  thr=0.05 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.10 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.15 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.20 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.25 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.30 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.35 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.40 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.45 Acc= 33.3% Prec= 33.3% Rec=100.0% F1=0.500 FAR=100.0% (TP=24 FP=48 FN= 0 TN= 0) <-- GOOD
+  thr=0.50 Acc= 34.7% Prec= 33.8% Rec=100.0% F1=0.505 FAR= 97.9% (TP=24 FP=47 FN= 0 TN= 1) <-- GOOD
+  thr=0.55 Acc= 63.9% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  4.2% (TP= 0 FP= 2 FN=24 TN=46)
+  thr=0.60 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.65 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.70 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.75 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.80 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.85 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.90 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+  thr=0.95 Acc= 66.7% Prec=  0.0% Rec=  0.0% F1=0.000 FAR=  0.0% (TP= 0 FP= 0 FN=24 TN=48)
+
+======================================================================
+PHASE 4: Preprocessing Comparison (best model, threshold=0.5)
+======================================================================
+  raw     : Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8%
+  clahe   : Acc= 38.9% Prec= 35.3% Rec=100.0% F1=0.522 FAR= 91.7%
+  gamma   : Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8%
+  gray    : Acc= 38.9% Prec= 35.3% Rec=100.0% F1=0.522 FAR= 91.7%
+
+======================================================================
+PHASE 5: Face Quality Filter Sweep (best model)
+======================================================================
+  q>=0.0: Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8% skipped=0
+  q>=0.1: Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8% skipped=0
+  q>=0.2: Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8% skipped=0
+  q>=0.3: Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8% skipped=0
+  q>=0.4: Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8% skipped=0
+  q>=0.5: Acc= 36.1% Prec= 34.3% Rec=100.0% F1=0.511 FAR= 95.8% skipped=0
+  q>=0.6: Acc= 37.1% Prec= 35.3% Rec=100.0% F1=0.522 FAR= 95.7% skipped=1
+
+======================================================================
+OPTIMIZATION SUMMARY
+======================================================================
+
+Best model: drowsiness_robust (4.4 MB)
+Default performance: Acc=34.7% Recall=100.0% FAR=97.9%
+
+Optimal threshold: 0.50
+  Accuracy:  34.7%
+  Precision: 33.8%
+  Recall:    100.0%
+  F1:        0.505
+  FAR:       97.9%
+
+Results saved to results\optimization_results.csv
+Threshold sweep saved to results\threshold_sweep.csv
